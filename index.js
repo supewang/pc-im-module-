@@ -1,0 +1,15 @@
+"use strict";
+const imclass = require("./common/projectClass");
+const { ClientList, Client } = require("./common/clientClass");
+const { GroupList, Group, MemberList, Member } = require("./common/groupClass");
+const { Message } = require("./common/messageClass");
+module.exports.Project = imclass.Project;
+module.exports.User = imclass.User;
+module.exports.BaseUser = imclass.BaseUser;
+module.exports.ClientList = ClientList;
+module.exports.Client = Client;
+module.exports.GroupList = GroupList;
+module.exports.Group = Group;
+module.exports.MemberList = MemberList;
+module.exports.Member = Member;
+module.exports.Message = Message;

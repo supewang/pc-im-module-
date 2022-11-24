@@ -1,0 +1,522 @@
+syntax="proto3";
+
+package com.hyjkim.common.protobuf;
+
+//option optimize_for = SPEED;
+option java_outer_classname = "ImProtocol";
+
+/**
+说明：
+    所有枚举字段定义在ProtoConstants
+ */
+
+//Publish包装类
+message PublishMessage{
+    string packetid = 1; //数据包客户端标识
+    bytes payload = 2; //具体数据包数据
+}
+
+//PublishAck包装类
+message PublishAckMessage{
+    string packetid = 1; //数据包客户端标识
+    int32 errorCode = 2; //数据包处理状态
+    string errorMsg = 3; //错误消息
+    bytes payload = 4; //Ack具体数据包数据
+}
+
+/**Parameter Begin**/
+//注册 topic => AUTH
+message AuthenticationRequest{
+    string token = 1; //通过hyjkim进行登录获取到token
+    string cid = 2; //前端cid
+}
+
+//上传设备信息 topic => UDI
+message UploadDeviceInfoRequest{
+    string token = 1; //推送厂商token
+    string voip_token = 2; //推送厂商voip token
+    int32 platform = 3; //平台枚举 Platform
+    int32 push_type = 4; //推送枚举 PushType
+    string package_name = 5; //包名
+    string device_name = 6; //设备名称
+    string device_version = 7; //设备版本
+    string phone_name = 8; //自定义的设备名
+    string language = 9; //语言 CN|EN...
+    string carrier_name = 10; //运营商 中国移动/中国联通
+}
+
+/**群操作 begin**/
+//创建群聊请求  topic => CG
+message CreateGroupRequest{
+    Group group = 1;
+    MessageContent notify_content = 2; //额外客户端自定义推送内容
+}
+
+//创建群聊响应
+message CreateGroupResult{
+    GroupInfo group_info = 1;
+}
+
+//修改群信息请求
+message ModifyGroupInfoRequest{
+    string gid = 1; //群id
+    int32 type = 2; //修改群信息的类型枚举 ModifyGroupInfoType
+    string value = 3; //修改值
+    MessageContent notify_content = 4; //额外客户端自定义推送内容
+}
+
+//添加群成员请求 topic =>AGM
+message AddGroupMemberRequest{
+    string gid = 1; //群id
+    repeated GroupMember added_member = 2;
+    MessageContent notify_content = 3; //额外客户端自定义推送内容
+}
+
+//踢群成员请求 topic =>RGM
+message RemoveGroupMemberRequest{
+    string gid = 1; //群id
+    repeated string removed_member = 2; //需要提出群聊的uid
+    MessageContent notify_content = 3; //额外客户端自定义推送内容
+}
+
+//解散群聊请求 topic =>DG
+message DismissGroupRequest{
+    string gid = 1; //群id
+    MessageContent notify_content = 2; //额外客户端自定义推送内容
+}
+
+//退出群请求
+message QuitGroupRequest{
+    string gid = 1; //群id
+    MessageContent notify_content = 2; //额外客户端自定义推送内容
+}
+
+//转让群主请求
+message TransferGroupRequest{
+    string gid = 1; //群id
+    string new_owner = 2; //新群主uid
+    MessageContent notify_content = 3; //额外客户端自定义推送内容
+}
+
+//群成员修改群昵称请求
+message ModifyGroupMemberAlias{
+    string gid = 1; //群id
+    string alias = 2; //群昵称
+    MessageContent notify_content = 3; //额外客户端自定义推送内容
+}
+
+//指定群成员禁言请求
+message SetGroupMemberSilenceRequest{
+    string gid = 1; //群id
+    int32 silence = 2; //禁言枚举 SilenceType
+    repeated string user_id = 3; //禁言的群成员uid
+}
+
+//查询群信息请求
+message PullGroupInfoRequest{
+    string gid = 1; //群id数组
+    int64 dt = 2; //客户端dt，如果群成员dt比此dt大才进行返回
+}
+
+//通过群id数组查群信息请求
+message PullGroupInfoListRequest{
+    repeated PullGroupInfoRequest pullGroupInfo = 1; //群id数组
+}
+
+//查询群信息响应
+message PullGroupInfoResult{
+    repeated GroupInfo info = 1;
+}
+
+//查询群成员请求
+message PullGroupMemberRequest{
+    string gid = 1; //群id
+    int64 member_update_dt = 2; //客户端member_update_dt，如果群成员dt比此dt大才进行返回
+}
+
+//查询群成员响应
+message PullGroupMemberResult{
+    repeated GroupMember member = 1;
+    string gid = 2; //群id
+}
+
+//查询群聊列表请求
+message PullGroupListRequest{
+    int64 dt = 1; //客户端dt，如果群成员dt比此dt大才进行返回
+    MessageContent notify_content = 2; //额外客户端自定义推送内容
+    int32 group_status = 3;
+}
+
+//查询群聊列表响应
+message PullGroupListResult{
+    repeated GroupInfoWithMid info = 1;
+}
+//群信息及群员UID
+message GroupInfoWithMid{
+    GroupInfo groupInfo = 1;
+    repeated string topNineMemberUid = 2; // 前九位群员uid（入参 dt=0 时才返回）
+}
+/**群操作 end**/
+
+/**好友操作 begin**/
+//添加好友请求
+message AddFriendRequest{
+    string target_uid = 1;
+    string reason = 2; //添加原因
+    int32 fromsource = 3; //来源枚举 FromSource
+    string detailedDescription = 4; //详细说明
+    string alias = 5;
+    int32 from_tag = 6;
+    int32 target_tag = 7;
+}
+//系统自动互相添加好友，弃用，替换为 ImProtocol#UserPk
+message MutualAddFriendRequest{
+    string target_uid = 1;
+    /*int32 fromsource = 2;*/ //来源枚举 FromSource
+    /*string detailedDescription = 3;*/ //详细说明
+}
+
+//查询好友请求响应
+message GetFriendRequestResult{
+    repeated FriendRequest entry = 1;
+    int64 update_dt = 2;
+}
+
+//处理好友请求请求
+message HandleFriendRequest{
+    string target_uid = 1;
+    int32 status = 2; //处理状态枚举 HandlerFriendStatus
+    int32 fromsource = 3; //来源枚举 FromSource
+    string alias = 4;
+}
+
+//加入黑名单请求
+message BlackUserRequest{
+    string target_uid = 1; //拉黑的uid
+    int32 status = 2; //好友状态枚举 FriendStatus
+}
+
+//查询好友响应
+message GetFriendsResult{
+    repeated Friend entry = 1;
+    int64 update_dt = 2;
+    string uid = 3; //搜索目标好友列表 如果这个参数存在就不使用token中的uid
+}
+
+//好友备注
+message AliasUserRequest{
+    string target_uid = 1; //需要备注好友的uid
+    string alias = 2; //好友备注内容
+}
+
+//查询好友状态响应
+message GetFriendStatusResult{
+    repeated FriendStatus friendStatus = 1;
+}
+
+//好友状态（目前仅拉黑状态）
+message FriendStatus{
+    string uid = 1;         // 当前用户uid
+    string target_uid = 2;  // 目标好友uid
+    int32 blacked = 3;      // 对 target_uid 的拉黑状态
+    int32 state = 4;        // 对 target_uid 的删除状态
+}
+/**好友操作 end**/
+
+/**用户信息操作 begin**/
+//拉取用户信息请求
+// topic => GET_USER
+message PullUserRequest{
+    repeated UserRequest request = 1;
+}
+message UserRequest{
+    string uid = 1;
+    int64 update_dt = 2;
+}
+
+//拉取用户信息响应
+message PullUserResult{
+    repeated UserResult result = 1;
+}
+message UserResult{
+    User user = 1;
+    int32 code = 2; //枚举 UserResultCode
+}
+
+//修改用户信息请求
+// topic => UPDATE_USER
+message ModifyMyInfoRequest{
+    repeated InfoEntry entry = 1;
+}
+message InfoEntry{
+    int32 type = 1; //枚举 MyInfoType
+    string value = 2;
+}
+
+//关键字查询用户，用于搜索用户添加好友
+message SearchUserRequest{
+    string keyword = 1; //关键字
+    int32 fuzzy = 2; //是否模糊查询枚举 YesOrNot
+    //int32 page = 3;
+}
+
+//关键字查询用户响应
+message SearchUserResult{
+    repeated User entry = 1;
+}
+/**用户信息操作 end**/
+
+/**用户配置 begin**/
+//修改用户配置请求
+message ModifyUserSettingRequest{
+    string uid = 1;
+    int32 scope = 2;
+    string key = 3;
+    string value = 4;
+}
+//修改用户配置响应
+message ModifyUserSettingResult{
+    string uid = 1;
+    int32 scope = 2;
+    string key = 3;
+    string value = 4;
+    int64 update_dt = 5;
+}
+
+//获取用户配置信息请求
+message GetUserSettingRequest{
+    string uid = 1;//uid
+    int64 dt = 2; //客户端dt，如果用户配置dt比此dt大才进行返回
+}
+
+//获取用户配置信息响应
+message GetUserSettingResult{
+    repeated UserSettingEntry entry = 1;
+}
+/**用户配置 end**/
+
+/**消息操作 begin**/
+//拉取消息请求
+message PullMessageRequest{
+    int64 seq = 1; //客户端消息seq
+    int32 type = 2; //暂时固定0
+}
+//拉取消息响应
+message PullMessageResult{
+    repeated Message message = 1;
+    int64 current_seq = 2; //返回给客户端目前拉取消息后所读到的seq
+    //int64 head = 3;
+}
+//发送消息响应
+message SendMessageResult{
+    int64 message_id = 1;//消息ID
+    int64 current_seq = 2;//当前消息的seq
+    int64 dt = 3;//消息的创建时间
+}
+/**消息操作 end**/
+/**Parameter End**/
+
+
+/**Entity Begin**/
+message GroupInfo{
+    string gid = 1; //群id
+    string name = 2; //群名称
+    string portrait = 3; //群头像
+    string owner = 4; //群主uid
+    int32 member_count = 5; //群成员数量
+    string extra = 6;
+    int64 update_dt = 7; //群dt
+    int64 member_update_dt = 8; //群成员如果有变动（新增或删除或退群）需要更新此dt，查询群成员的时候会通过此参数确定返回的数据
+    int32 mute = 9; //是否禁言字典 YesOrNot
+    int32 private_chat = 10; //是否允许通过群与别人私聊，默认不允许 字典 YesOrNot
+    //int32 searchable = 11;
+    string introduction = 11; //群介绍
+    string announcement = 12; //群公告
+    int32 status = 13;//状态：1-启用、2-禁用、3-解散
+    int32 makefriend = 14;//交友状态  0--可交友  1--不可交友
+    int64 create_dt = 15;//创建时间
+}
+
+message Message{
+    Conversation conversation = 1; //会话
+    string from_user = 2; //发送者
+    string cid = 3; // 发送者的cid,发送者不能拉取该消息及收不到拉取通知
+    MessageContent content = 4; //发送内容
+    int64 message_id = 5; //消息ID
+    int64 dt = 6;//消息的创建时间
+    int64 seq = 7;//消息的seq
+    /*以下 预留字段*/
+    string to_user = 8;//指定接收人
+    repeated string to = 9;//repeated 指定接收人列表
+
+}
+
+message MessageList{
+    repeated Message message = 1;
+}
+
+message Conversation{
+    int32 type = 1;//会话类型 ProtoConstants.ConversationType
+    string target = 2;//发送目标id，单聊为uid，群聊为gid
+}
+
+message MessageContent{
+    int32 type = 1;//消息类型 ProtoConstants.ContentType
+    string searchable_content = 2;//可搜索文本信息
+    string push_content = 3;//离线推送文本
+    string content = 4;//消息内容，存放例如，音频文件时长，文件大小等信息
+    string remoteMediaUrl = 5;//文件 图片 音频文件 url
+    int32 persist_flag = 6;//是否持久化消息 ProtoConstants.PersistFlag
+    int32 mentioned_type = 7;//提示类型
+    repeated string mentioned_target = 8;//用于用户开启免打扰后进行通知 例如 @
+    string extra = 9;
+}
+
+message GroupMember{
+    string member_id = 1; //uid
+    string alias = 2; //群成员别名
+    int32 type = 3; //字典 GroupMemberType
+    int32 silence = 4;// 是否禁言 YesOrNot
+    int64 update_dt = 5;
+    int32 sort = 6;  // 排序
+}
+
+message Group{
+    GroupInfo group_info = 1;
+    repeated GroupMember members = 2;
+}
+
+message Friend{
+    string uid = 1;
+    int32 state = 2; //字典 FriendStatus
+    int64 update_dt = 3;
+    string alias = 4; //好友备注
+    int32 fromsource = 5; //来源字典 FromSource
+    string detailedDescription = 6;
+    int32 blacked = 7; //黑名单 0-normal，1=blacked
+    int32 is_top = 8;  //置顶 0-非置顶，1-置顶
+    int32 tag = 9;//分组 1-医生 2-医助
+}
+
+message User{
+    string uid = 1;
+    string user_id = 2;
+    string display_name = 3;
+    string portrait = 4;
+    string mobile = 5;
+    string email = 6;
+    string address = 7;
+    string company = 8;
+    string extra = 9;
+    int64 update_dt = 10;
+    int32 gender = 11;
+    string social = 12;
+    int32 type = 13;
+    int32 status = 14;
+    int64 create_time = 15;
+}
+
+message UserSettingEntry{
+    string uid = 1; //被禁言人的uid
+    int32 scope = 2;
+    string key = 3;
+    string value = 4;
+    int64 update_dt = 5;
+}
+
+message FriendRequest{
+    string from_uid = 1;
+    string to_uid = 2;
+    string reason = 3; //添加好友描述
+    int32 status = 4; //字典 FriendRequestStatus
+    int64 update_dt = 5;
+    bool from_read_status = 6; //暂时不处理此字段
+    bool to_read_status = 7; //暂时不处理此字段
+    int32 fromsource = 8; //来源字典 FromSource
+    int64 create_dt = 9;//创建时间
+    int32 from_tag = 10;//分组
+    int32 target_tag = 11;//分组
+}
+
+//消息发送A->B 服务端需发一条NotifyMessage给B让B进行消息拉取
+message NotifyMessage{
+    int32 type = 1; //暂时固定0
+    int64 seq = 2; //发送给用户最新的seq，让他调用拉取消息进行消息拉取
+}
+
+message AuthenticationResult{
+    string file_domain = 1; //文件下载前缀域名
+    int64 heartbeat_interval = 2; //心跳间隔时长
+}
+
+message BindingGatewayIdRequest{
+    string gateway_id = 1; //gateway的id
+}
+
+message SearchMessageRequest{
+    int64 message_dt = 1;  //没有就使用当前时间
+    int32 page_size = 2;    //页容量
+    int32 type = 3;        //会话类型 ProtoConstants.ConversationType
+    string from_uid = 4;   // 对方 (群聊为空，搜索的时候对方和自己互换)
+    string to_uid = 5;     //自己  (群聊为空，搜索的时候对方和自己互换)
+    string group_id = 6;   //群聊 gid
+}
+
+message MediaMessage{
+    string from_uid = 1;
+    string target_uid = 2;
+    string extra = 3;
+}
+
+message HandleTopFriend {
+    string target_uid = 1;
+    int32 status = 2;  // 0-非置顶  1-置顶
+}
+
+message DeleteMessageRequest {
+    string target_id = 1;  //私聊的uid或者群聊gid
+}
+
+// 弃用，替换为 ImProtocol#UserPk
+message DeleteFriendRequest {
+    string target_uid = 1;
+}
+
+message GetFriendRelationShipResult {
+    bool exist = 1; //对方的通讯录是否存在自己
+}
+
+/**Entity End**/
+
+/**Generic Param Begin*/
+message Version{
+    int64 update_dt = 1;  //更新时间戳
+}
+
+message UserPK{
+    string target_uid = 1; //用户uid
+}
+
+/*单独查询单聊或者群聊Message*/
+message GetMessageRequest {
+    int32 type = 1;
+    string target_id = 2;
+    int64 seq = 3;
+}
+
+message GetFriendsRequest{
+    int64 update_dt = 1;  //更新时间戳
+    string target_uid = 2; //搜索目标好友列表 如果这个参数存在就不使用token中的uid
+    int32 tag = 3;//分组查询 0-查全部
+}
+/**Generic Param End*/
+
+/*待定协议 begin*/
+/*message GeneralResult{
+    int32 error_code = 1;
+}*/
+
+/*message Version{
+    int64 version = 1;
+}*/
+/*待定协议 end*/
