@@ -16,6 +16,7 @@ class Project {
   constructor(args) {
     this.applicationId = args.applicationId; //"faad83a97ccd39c0c1336ca75f95a0df";
     this.applicationSecret = args.applicationSecret; //"junyou";
+    this.initWsUrl = args.initWsUrl || "";
     this.granType = args.granType; //"applicationCredentials";
     this.fileUploadHost = args.fileUploadHost || ""; //  /pub/file/upload
     this.fileViewHost = args.fileViewHost || ""; //"https://junyou-1258342435.cos.ap-guangzhou.myqcloud.com";
@@ -48,7 +49,7 @@ class Project {
     return this._user;
   }
   get wsurl() {
-    return this._ssl ? this.websocketPath : `ws://${this._wshost}:${this._wsProt}${this._wspath}`;
+    return this.initWsUrl || (this._ssl ? this.websocketPath : `ws://${this._wshost}:${this._wsProt}${this._wspath}`);
   }
   get apiurl() {
     return this._restHost + this._restApiPath;
